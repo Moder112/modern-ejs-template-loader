@@ -1,10 +1,13 @@
 const path = require('path');
 const fs = require('fs');
-const { compile } = require('ejs');
+const ejs = require('ejs');
+const { default: htmlminifier } = require('html-minifier-terser');
+const { minify_sync, minify } = require('terser');
+const { readFile } = require('fs/promises');
 /**
  * @this { import('webpack').LoaderContext<any> }
  */
-module.exports = function (source) {
+module.exports = async function (source) {
     const options = this.getOptions() || {};
     const templatePath = this.resourcePath;
     
@@ -18,12 +21,42 @@ module.exports = function (source) {
         client: true,
     };
 
+    const compile = async (source, data) => {
+        if(!!options.minify?.html) {
+            source = await htmlminifier.minify(source, {
+                minifyCSS: true,
+                minifyJS: !!options.minify?.js,
+                removeComments: true,
+                removeAttributeQuotes: true,
+                removeEmptyAttributes: true,
+                removeOptionalTags: true,
+            })
+        }
+
+        let template = ejs.compile(source, data);
+        if(!!options.minify?.js) {
+            template = (await minify({
+                [data.filename]: template.toString()
+            }, {
+                compress: {
+                    unused: false,
+                },
+                parse: {
+                    shebang: false
+                }
+            })).code;
+        }
+
+        return template;
+    }
+
+
     const map = {};
-    function parseIncludes(location) {
+    async function parseIncludes(location) {
         const regex = /(<%-\s*include\s*\(\s*)(['"]([^'"]+)['"])(\s*,?\s*([^)]*)\s*\)\s*%>)/g;
         let match;
         const absolutePath = path.resolve(location);
-        let source = fs.readFileSync(absolutePath, 'utf-8');
+        let source = await readFile(absolutePath, 'utf-8');
 
         while ((match = regex.exec(source)) !== null) {
             let fullMatch = match[0];
@@ -33,8 +66,8 @@ module.exports = function (source) {
             const resolvedPath = path.resolve(directory, originalPath);
             const uniquePath = path.relative(cwd, resolvedPath);
             
-            const contentWithIncludes = parseIncludes(resolvedPath);
-            const template = compile(contentWithIncludes, {
+            const contentWithIncludes = await parseIncludes(resolvedPath);
+            const template = await compile(contentWithIncludes, {
                 ...data,
                 filename: path.relative(cwd, path.resolve(resolvedPath)), 
                 root: cwd 
@@ -56,8 +89,8 @@ module.exports = function (source) {
         return `{${value}}`;
     }
     
-    source = parseIncludes(templatePath);
-    const template = compile(source, {
+    source = await parseIncludes(templatePath);
+    const template = await compile(source, {
         ...data,
         filename: path.relative(cwd, path.resolve(templatePath)), 
         root: cwd 

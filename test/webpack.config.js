@@ -10,7 +10,12 @@ module.exports = {
         test: /\.ejs$/,
         use: {
           loader: require.resolve("../"),
-          options: {},
+          options: {
+            minify: {
+                html: true,
+                js: true,
+            }
+          },
         },
       },
     ],

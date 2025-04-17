@@ -10,12 +10,12 @@
     "test": "cd test && webpack ./index.js --mode=development && node test.js"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
     "webpack": "^5.99.5",
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
     "ejs": "^3.1.10",
-    "loader-utils": "^3.3.1"
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.39.0"
   }
 }
