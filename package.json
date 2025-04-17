@@ -1,5 +1,5 @@
 {
-  "name": "modern-ejs-template-loader",
+  "name": "modern-ejs-compile-loader",
   "version": "0.0.1",
   "description": "Modern loader for .ejs files which supports v3 style imports",
   "license": "MIT",

@@ -11,14 +11,13 @@ module.exports = function (source) {
     const cwd = process.cwd();
 
     const data = {
-        client: true,
-        ...options.data,
         async: false,
-        cache:false,
+        cache: false,
+        ...options.data,
+        client: true,
     };
 
     const map = {};
-
     function parseIncludes(location) {
         const regex = /(<%-\s*include\s*\(\s*)(['"]([^'"]+)['"])(\s*,?\s*([^)]*)\s*\)\s*%>)/g;
         let match;
@@ -34,7 +33,11 @@ module.exports = function (source) {
             const uniquePath = path.relative(cwd, resolvedPath);
             
             const contentWithIncludes = parseIncludes(resolvedPath);
-            const template = compile(contentWithIncludes, data);
+            const template = compile(contentWithIncludes, {
+                ...data,
+                filename: path.resolve(resolvedPath), 
+                root: cwd 
+            });
             map[uniquePath] = `(d2)=>(${template.toString()})(d2, undefined, (path, data) => map[path](data))`;
 
             const replaced = fullMatch.replace(originalPath, `${uniquePath}`);
@@ -53,9 +56,8 @@ module.exports = function (source) {
     }
     
     source = parseIncludes(templatePath);
-    const template = compile(source, { 
-        views: [path.dirname(templatePath)],
-        client: true, 
+    const template = compile(source, {
+        ...data,
         filename: path.resolve(templatePath), 
         root: cwd 
     });
