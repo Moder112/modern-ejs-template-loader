@@ -1,6 +1,5 @@
 module.exports = {
   mode: "production",
-  cache: false,
   output: {
     path: __dirname,
     filename: "test.js",

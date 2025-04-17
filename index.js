@@ -13,6 +13,7 @@ module.exports = function (source) {
     const data = {
         async: false,
         cache: false,
+        devtool: false,
         ...options.data,
         client: true,
     };
@@ -35,7 +36,7 @@ module.exports = function (source) {
             const contentWithIncludes = parseIncludes(resolvedPath);
             const template = compile(contentWithIncludes, {
                 ...data,
-                filename: path.resolve(resolvedPath), 
+                filename: path.relative(cwd, path.resolve(resolvedPath)), 
                 root: cwd 
             });
             map[uniquePath] = `(d2)=>(${template.toString()})(d2, undefined, (path, data) => map[path](data))`;
@@ -58,7 +59,7 @@ module.exports = function (source) {
     source = parseIncludes(templatePath);
     const template = compile(source, {
         ...data,
-        filename: path.resolve(templatePath), 
+        filename: path.relative(cwd, path.resolve(templatePath)), 
         root: cwd 
     });
     
