@@ -1,0 +1,21 @@
+{
+  "name": "modern-ejs-template-loader",
+  "version": "0.0.1",
+  "description": "Modern loader for .ejs files which supports v3 style imports",
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "cd test && webpack ./index.js --mode=development && node test.js"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "webpack": "^5.99.5",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "loader-utils": "^3.3.1"
+  }
+}
