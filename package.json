@@ -1,9 +1,9 @@
 {
   "name": "modern-ejs-compile-loader",
   "version": "0.1.0",
-  "description": "Modern loader for .ejs files which supports v3 style imports",
+  "description": "Modern webpack compile loader for .ejs files which supports v3-style includes",
   "license": "MIT",
-  "author": "",
+  "author": "Moder112",
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
