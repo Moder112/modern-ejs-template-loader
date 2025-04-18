@@ -6,6 +6,13 @@
   "author": "Moder112",
   "type": "commonjs",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Moder112/modern-ejs-template-loader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Moder112/modern-ejs-template-loader/issues"
+  },
   "scripts": {
     "test": "cd test && webpack ./index.js --mode=development && node test.js"
   },
