@@ -1,5 +1,5 @@
 const { it } = require("node:test");
-const template1 = require("./ejs/context/parent.ejs");
+const template1 = require("./ejs/grandparent.ejs");
 
 it('test', () => {
     console.log(template1());

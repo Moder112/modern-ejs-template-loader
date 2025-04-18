@@ -1,9 +1,12 @@
 const path = require('path');
-const fs = require('fs');
 const ejs = require('ejs');
-const { default: htmlminifier } = require('html-minifier-terser');
-const { minify_sync, minify } = require('terser');
+const { minify: htmlMinify } = require('html-minifier-terser');
+const { minify } = require('terser');
 const { readFile } = require('fs/promises');
+
+// @todo cache common files with a virutal module 
+// https://github.com/sysgears/webpack-virtual-modules
+
 /**
  * @this { import('webpack').LoaderContext<any> }
  */
@@ -12,6 +15,7 @@ module.exports = async function (source) {
     const templatePath = this.resourcePath;
     
     const cwd = process.cwd();
+    const relative = (...p) => path.relative(cwd, path.resolve(...p));
 
     const data = {
         async: false,
@@ -21,9 +25,10 @@ module.exports = async function (source) {
         client: true,
     };
 
+    // compile template string while applying transformations
     const compile = async (source, data) => {
         if(!!options.minify?.html) {
-            source = await htmlminifier.minify(source, {
+            source = await htmlMinify(source, {
                 minifyCSS: true,
                 minifyJS: !!options.minify?.js,
                 removeComments: true,
@@ -38,9 +43,6 @@ module.exports = async function (source) {
             template = (await minify({
                 [data.filename]: template.toString()
             }, {
-                compress: {
-                    unused: false,
-                },
                 parse: {
                     shebang: false
                 }
@@ -49,10 +51,11 @@ module.exports = async function (source) {
 
         return template;
     }
-
-
+    
     const map = {};
+    // parses ejs includes and saves them to a map
     async function parseIncludes(location) {
+        // match ejs includes
         const regex = /(<%-\s*include\s*\(\s*)(['"]([^'"]+)['"])(\s*,?\s*([^)]*)\s*\)\s*%>)/g;
         let match;
         const absolutePath = path.resolve(location);
@@ -63,28 +66,32 @@ module.exports = async function (source) {
             let originalPath = match[2].replace(/['"]/g, '');
 
             const directory = path.dirname(absolutePath);
-            const resolvedPath = path.resolve(directory, originalPath);
-            const uniquePath = path.relative(cwd, resolvedPath);
-            
-            const contentWithIncludes = await parseIncludes(resolvedPath);
-            const template = await compile(contentWithIncludes, {
+            const relativePath = relative(directory, originalPath);
+            prasedSource = await parseIncludes(relativePath);
+
+            const template = await compile(prasedSource, {
                 ...data,
-                filename: path.relative(cwd, path.resolve(resolvedPath)), 
+                filename: relativePath,
                 root: cwd 
             });
-            map[uniquePath] = `(d2)=>(${template.toString()})(d2, undefined, (path, data) => map[path](data))`;
 
-            const replaced = fullMatch.replace(originalPath, `${uniquePath}`);
+            const id = relativePath.replace(/\\|\//g, '-');
+
+            // we need to wrap the function to inject our include map
+            map[id] = `(d)=>(${template.toString()})(d, undefined, (p, d) => m[p](d))`;
+
+            // replace the original include path with ids for the parsed template
+            const replaced = fullMatch.replace(originalPath, id);
             source = source.replace(fullMatch, replaced);
         }
         return source;
     }
 
-
+    // stringifies all the compiled templates in a way where it can be evaluated as valid javascript
     function fnMapToString(map) {
         let value = '';
         for(const [k, v] of Object.entries(map)) {
-            value += `'${k}': (d)=>(${v.toString()})(d),\r\n`
+            value += `'${k}': ${v},`;
         }
         return `{${value}}`;
     }
@@ -92,13 +99,13 @@ module.exports = async function (source) {
     source = await parseIncludes(templatePath);
     const template = await compile(source, {
         ...data,
-        filename: path.relative(cwd, path.resolve(templatePath)), 
+        filename: relative(templatePath), 
         root: cwd 
     });
     
     return [
-        `const map = ${fnMapToString(map)};`,
+        `const m = ${fnMapToString(map)};`,
         `const template = ${template.toString()};`,
-        `module.exports = ${((data) => template(data, undefined, (path, data) => map[path](data))).toString()}`
+        `module.exports = ${((data) => template(data, undefined, (p, d) => m[p](d))).toString()}`
     ].join('');
 }

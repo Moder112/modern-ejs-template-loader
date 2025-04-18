@@ -1,6 +1,6 @@
 {
   "name": "modern-ejs-compile-loader",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Modern loader for .ejs files which supports v3 style imports",
   "license": "MIT",
   "author": "",
