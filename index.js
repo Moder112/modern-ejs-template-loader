@@ -21,6 +21,7 @@ module.exports = async function (source) {
         async: false,
         cache: false,
         devtool: false,
+        compileDebug: false,
         ...options.data,
         client: true,
     };
