@@ -22,6 +22,7 @@ module.exports = async function (source) {
         cache: false,
         devtool: false,
         compileDebug: false,
+        rmWhitespace: !!options.minify?.html,
         ...options.data,
         client: true,
     };
