@@ -1,6 +1,6 @@
 {
   "name": "modern-ejs-compile-loader",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Modern webpack compile loader for .ejs files which supports v3-style includes",
   "license": "MIT",
   "author": "Moder112",
